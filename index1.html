@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Pac-Mundo</title>
+	<title>Maintenance - Moota.co</title>
 	<link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Permanent+Marker">
 	<style type="text/css">
 		body {
@@ -37,20 +37,28 @@
 			text-decoration: none;
 			color: #0000FF;
 		}
-  </style>
-
+	</style>
 </head>
 <body>
-
-    <h1>Pac Man</h1>
-    <h1>Mundo-Senai</h1>
+	<div id="shim">shim for font face</div>
+	<h1>Maintenance</h1>
+	<p style="text-align:center;">Sedang migrasi server dan upgrade engine 23:00 s/d 05:00. Mohon doanya :)</p>
 	<div id="pacman"></div>
 
 	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.8.3/modernizr.min.js"></script>
 	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
 	<script type="text/javascript">
-		
-    var NONE        = 4,
+		/*jslint browser: true, undef: true, eqeqeq: true, nomen: true, white: true */
+/*global window: false, document: false */
+
+/*
+ * fix looped audio
+ * add fruits + levels
+ * fix what happens when a ghost is eaten (should go back to base)
+ * do proper ghost mechanics (blinky/wimpy etc)
+ */
+
+var NONE        = 4,
     UP          = 3,
     LEFT        = 2,
     DOWN        = 1,
@@ -75,7 +83,7 @@ Pacman.Ghost = function (game, map, colour) {
     
     function getNewCoord(dir, current) { 
         
-        var speed = isVunerable() ? 1: isHidden() ? 2 : 1.3;//velocidade do fantasma
+        var speed  = isVunerable() ? 1 : isHidden() ? 4 : 2,
             xSpeed = (dir === LEFT && -speed || dir === RIGHT && speed || 0),
             ySpeed = (dir === DOWN && speed || dir === UP && -speed || 0);
     
@@ -85,7 +93,9 @@ Pacman.Ghost = function (game, map, colour) {
         };
     };
 
-    
+    /* Collision detection(walls) is done when a ghost lands on an
+     * exact block, make sure they dont skip over it 
+     */
     function addBounded(x1, x2) { 
         var rem    = x1 % 10, 
             result = rem + x2;
@@ -100,7 +110,7 @@ Pacman.Ghost = function (game, map, colour) {
     function isVunerable() { 
         return eatable !== null;
     };
-    //fantasma vivo
+    
     function isDangerous() {
         return eaten === null;
     };
@@ -132,18 +142,16 @@ Pacman.Ghost = function (game, map, colour) {
             dir === RIGHT && LEFT ||
             dir === UP && DOWN || UP;
     };
-    
+
     function makeEatable() {
-        
         direction = oppositeDirection(direction);
         eatable = game.getTick();
     };
 
     function eat() { 
-    eatable = null;
-    eaten = game.getTick();
+        eatable = null;
+        eaten = game.getTick();
     };
-
 
     function pointToCoord(x) {
         return Math.round(x / 10);
@@ -300,7 +308,7 @@ Pacman.Ghost = function (game, map, colour) {
         }
         
         due = getRandomDirection();
-        //posiçao nova e antiga
+        
         return {
             "new" : position,
             "old" : oldPos
@@ -325,6 +333,7 @@ Pacman.User = function (game, map) {
         eaten     = null,
         due       = null, 
         lives     = null,
+        score     = 5,
         keyMap    = {};
     
     keyMap[KEY.ARROW_LEFT]  = LEFT;
@@ -332,14 +341,16 @@ Pacman.User = function (game, map) {
     keyMap[KEY.ARROW_RIGHT] = RIGHT;
     keyMap[KEY.ARROW_DOWN]  = DOWN;
 
-    
-    function addScore(nScore) {
-    }
-   
+    function addScore(nScore) { 
+        score += nScore;
+        if (score >= 10000 && score - nScore < 10000) { 
+            lives += 1;
+        }
+    };
+
     function theScore() { 
         return score;
     };
-
 
     function loseLife() { 
         lives -= 1;
@@ -476,7 +487,7 @@ Pacman.User = function (game, map) {
             addScore((block === Pacman.BISCUIT) ? 10 : 50);
             eaten += 1;
             
-            if (eaten === 4) {
+            if (eaten === 182) {
                 game.completedLevel();
             }
             
@@ -935,11 +946,12 @@ var PACMAN = (function () {
 
         ctx.fillStyle = !soundDisabled() ? "#00FF00" : "#FF0000";
         ctx.font = "bold 16px sans-serif";
+        //ctx.fillText("♪", 10, textBase);
         ctx.fillText("s", 10, textBase);
 
         ctx.fillStyle = "#FFFF00";
         ctx.font      = "14px Calibri";
-        ctx.fillText("Time: " + user.theTime(), 30, textBase); // aqui é o time
+        ctx.fillText("Score: " + user.theScore(), 30, textBase);
         ctx.fillText("Level: " + level, 260, textBase);
     }
 
@@ -950,7 +962,7 @@ var PACMAN = (function () {
 
     function mainDraw() { 
 
-        var diff, u, i, len;
+        var diff, u, i, len, nScore;
         
         ghostPos = [];
 
@@ -976,7 +988,10 @@ var PACMAN = (function () {
                 if (ghosts[i].isVunerable()) { 
                     audio.play("eatghost");
                     ghosts[i].eat();
-                    eatenCount += 1;            
+                    eatenCount += 1;
+                    nScore = eatenCount * 50;
+                    drawScore(nScore, ghostPos[i]);
+                    user.addScore(nScore);                    
                     setState(EATEN_PAUSE);
                     timerStart = tick;
                 } else if (ghosts[i].isDangerous()) {
@@ -988,147 +1003,73 @@ var PACMAN = (function () {
         }                             
     };
 
-function mainLoop() {
+    function mainLoop() {
 
-var diff;
+        var diff;
 
-if (state !== PAUSE) { 
-    ++tick;
-}
+        if (state !== PAUSE) { 
+            ++tick;
+        }
 
-map.drawPills(ctx);
+        map.drawPills(ctx);
 
-if (state === PLAYING) {
-    mainDraw();
-} else if (state === WAITING && stateChanged) {            
-    stateChanged = false;
-    map.draw(ctx);
-    dialog("Press N to start a New game");            
-} else if (state === EATEN_PAUSE && 
-           (tick - timerStart) > (Pacman.FPS / 3)) {
-    map.draw(ctx);
-    setState(PLAYING);
-} else if (state === DYING) {
-    if (tick - timerStart > (Pacman.FPS * 2)) { 
-        loseLife();
-    } else { 
-        redrawBlock(userPos);
-        for (i = 0, len = ghosts.length; i < len; i += 1) {
-            redrawBlock(ghostPos[i].old);
-            ghostPos.push(ghosts[i].draw(ctx));
-        }                                   
-        user.drawDead(ctx, (tick - timerStart) / (Pacman.FPS * 2));
-    }
-} else if (state === COUNTDOWN) {
-    
-    diff = 5 + Math.floor((timerStart - tick) / Pacman.FPS);
-    
-    if (diff === 0) {
-        map.draw(ctx);
-        setState(PLAYING);
-    } else {
-        if (diff !== lastTime) { 
-            lastTime = diff;
+        if (state === PLAYING) {
+            mainDraw();
+        } else if (state === WAITING && stateChanged) {            
+            stateChanged = false;
             map.draw(ctx);
-            dialog("Starting in: " + diff);
-        }
-    }
-} 
-
-drawFooter();
-}
-
-let showingQuestion = false;
-let currentQuestion = null;
-let correctAnswer = null;
-
-const questions = [
-    {
-        question: "Qual a chance de sair cara ao jogar uma moeda justa?",
-        options: ["25%", "50%", "75%"],
-        answer: "50%"
-    },
-    {
-        question: "Qual a probabilidade de tirar um ás de um baralho padrão?",
-        options: ["1/13", "1/4", "1/52"],
-        answer: "1/13"
-    }
-];
-function eatenPill() {
-    audio.play("eatpill");
-    timerStart = tick;
-    eatenCount = 0;
-
-    for (let i = 0; i < ghosts.length; i++) {
-        ghosts[i].makeEatable(ctx);
-    }
-
-    // Sorteia e mostra a pergunta
-    const random = Math.floor(Math.random() * questions.length);
-    currentQuestion = questions[random];
-    correctAnswer = currentQuestion.answer;
-    showingQuestion = true;
-}
-function draw() {
-    // ... seu código de renderização do jogo
-
-    if (showingQuestion && currentQuestion) {
-        ctx.fillStyle = "white";
-        ctx.fillRect(100, 100, 600, 300);
-        ctx.fillStyle = "black";
-        ctx.font = "20px Arial";
-        ctx.fillText(currentQuestion.question, 120, 150);
-
-        currentQuestion.options.forEach((opt, i) => {
-            ctx.fillText(`${i + 1}. ${opt}`, 120, 200 + i * 40);
-        });
-    }
-
-    requestAnimationFrame(draw); // se for o caso
-}
-canvas.addEventListener("click", function(e) {
-    if (!showingQuestion) return;
-
-    const x = e.offsetX;
-    const y = e.offsetY;
-
-    currentQuestion.options.forEach((opt, i) => {
-        if (x > 120 && x < 300 && y > 180 + i * 40 && y < 200 + i * 40) {
-            if (opt === correctAnswer) {
-                showingQuestion = false;
-                currentQuestion = null;
-            } else {
-                showingQuestion = false;
-                currentQuestion = null;
-
-                pacman.resetPosition();
-                ghosts.forEach(g => g.resetPosition());
+            dialog("Press N to start a New game");            
+        } else if (state === EATEN_PAUSE && 
+                   (tick - timerStart) > (Pacman.FPS / 3)) {
+            map.draw(ctx);
+            setState(PLAYING);
+        } else if (state === DYING) {
+            if (tick - timerStart > (Pacman.FPS * 2)) { 
+                loseLife();
+            } else { 
+                redrawBlock(userPos);
+                for (i = 0, len = ghosts.length; i < len; i += 1) {
+                    redrawBlock(ghostPos[i].old);
+                    ghostPos.push(ghosts[i].draw(ctx));
+                }                                   
+                user.drawDead(ctx, (tick - timerStart) / (Pacman.FPS * 2));
             }
-        }
-    });
-});
+        } else if (state === COUNTDOWN) {
+            
+            diff = 5 + Math.floor((timerStart - tick) / Pacman.FPS);
+            
+            if (diff === 0) {
+                map.draw(ctx);
+                setState(PLAYING);
+            } else {
+                if (diff !== lastTime) { 
+                    lastTime = diff;
+                    map.draw(ctx);
+                    dialog("Starting in: " + diff);
+                }
+            }
+        } 
 
-// --- Parte 5: resetPosition de Pac-Man e Fantasmas
-pacman.resetPosition = function() {
-    this.x = this.startX;
-    this.y = this.startY;
-};
+        drawFooter();
+    }
 
-ghosts.forEach(g => {
-    g.resetPosition = function() {
-        this.x = this.startX;
-        this.y = this.startY;
+    function eatenPill() {
+        audio.play("eatpill");
+        timerStart = tick;
+        eatenCount = 0;
+        for (i = 0; i < ghosts.length; i += 1) {
+            ghosts[i].makeEatable(ctx);
+        }        
     };
-})
-
-function completedLevel() {
+    
+    function completedLevel() {
         setState(WAITING);
         level += 1;
         map.reset();
         user.newLevel();
         startLevel();
     };
-    
+
     function keyPress(e) { 
         if (state !== WAITING && state !== PAUSE) { 
             e.preventDefault();
@@ -1204,22 +1145,23 @@ function completedLevel() {
     
 }());
 
+/* Human readable keyCode index */
 var KEY = {'BACKSPACE': 8, 'TAB': 9, 'NUM_PAD_CLEAR': 12, 'ENTER': 13, 'SHIFT': 16, 'CTRL': 17, 'ALT': 18, 'PAUSE': 19, 'CAPS_LOCK': 20, 'ESCAPE': 27, 'SPACEBAR': 32, 'PAGE_UP': 33, 'PAGE_DOWN': 34, 'END': 35, 'HOME': 36, 'ARROW_LEFT': 37, 'ARROW_UP': 38, 'ARROW_RIGHT': 39, 'ARROW_DOWN': 40, 'PRINT_SCREEN': 44, 'INSERT': 45, 'DELETE': 46, 'SEMICOLON': 59, 'WINDOWS_LEFT': 91, 'WINDOWS_RIGHT': 92, 'SELECT': 93, 'NUM_PAD_ASTERISK': 106, 'NUM_PAD_PLUS_SIGN': 107, 'NUM_PAD_HYPHEN-MINUS': 109, 'NUM_PAD_FULL_STOP': 110, 'NUM_PAD_SOLIDUS': 111, 'NUM_LOCK': 144, 'SCROLL_LOCK': 145, 'SEMICOLON': 186, 'EQUALS_SIGN': 187, 'COMMA': 188, 'HYPHEN-MINUS': 189, 'FULL_STOP': 190, 'SOLIDUS': 191, 'GRAVE_ACCENT': 192, 'LEFT_SQUARE_BRACKET': 219, 'REVERSE_SOLIDUS': 220, 'RIGHT_SQUARE_BRACKET': 221, 'APOSTROPHE': 222};
 
 (function () {
-	
+	/* 0 - 9 */
 	for (var i = 48; i <= 57; i++) {
         KEY['' + (i - 48)] = i;
 	}
-	
+	/* A - Z */
 	for (i = 65; i <= 90; i++) {
         KEY['' + String.fromCharCode(i)] = i;
 	}
-	
+	/* NUM_PAD_0 - NUM_PAD_9 */
 	for (i = 96; i <= 105; i++) {
         KEY['NUM_PAD_' + (i - 96)] = i;
 	}
-	
+	/* F1 - F12 */
 	for (i = 112; i <= 123; i++) {
         KEY['F' + (i - 112 + 1)] = i;
 	}
@@ -1233,26 +1175,26 @@ Pacman.PILL    = 4;
 
 Pacman.MAP = [
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-	[0, 2, 2, 2, 2, 2, 2, 2, 2, 0, 2, 2, 2, 2, 2, 2, 2, 2, 0],
-	[0, 2, 0, 0, 2, 0, 0, 0, 2, 0, 2, 0, 0, 0, 2, 0, 0, 2, 0],
-	[0, 2, 0, 0, 2, 0, 0, 0, 2, 0, 2, 0, 0, 0, 2, 0, 0, 2, 0],
-	[0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0],
-	[0, 2, 0, 0, 4, 0, 2, 0, 0, 0, 0, 0, 2, 0, 4, 0, 0, 2, 0],
-	[0, 2, 2, 2, 2, 0, 2, 2, 2, 0, 2, 2, 2, 0, 2, 2, 2, 2, 0],
-	[0, 0, 0, 0, 2, 0, 0, 0, 2, 0, 2, 0, 0, 0, 2, 0, 0, 0, 0],
-	[2, 2, 2, 0, 2, 0, 2, 2, 2, 2, 2, 2, 2, 0, 2, 0, 2, 2, 2],
-	[0, 0, 0, 0, 2, 0, 2, 0, 0, 3, 0, 0, 2, 0, 2, 0, 0, 0, 0],
-	[2, 2, 2, 2, 2, 2, 2, 0, 3, 3, 3, 0, 2, 2, 2, 2, 2, 2, 2],
-	[0, 0, 0, 0, 2, 0, 2, 0, 0, 0, 0, 0, 2, 0, 2, 0, 0, 0, 0],
-	[2, 2, 2, 0, 2, 0, 2, 2, 2, 2, 2, 2, 2, 0, 2, 0, 2, 2, 2],
-	[0, 0, 0, 0, 2, 0, 2, 0, 0, 0, 0, 0, 2, 0, 2, 0, 0, 0, 0],
-	[0, 2, 2, 2, 2, 2, 2, 2, 2, 0, 2, 2, 2, 2, 2, 2, 2, 2, 0],
-	[0, 2, 0, 0, 2, 0, 0, 0, 2, 0, 2, 0, 0, 0, 2, 0, 0, 2, 0],
-	[0, 2, 2, 0, 4, 2, 2, 2, 2, 2, 2, 2, 2, 2, 4, 0, 2, 2, 0],
-	[0, 0, 2, 0, 2, 0, 2, 0, 0, 0, 0, 0, 2, 0, 2, 0, 2, 0, 0],
-	[0, 2, 2, 2, 2, 0, 2, 2, 2, 0, 2, 2, 2, 0, 2, 2, 2, 2, 0],
-	[0, 2, 0, 0, 0, 0, 0, 0, 2, 0, 2, 0, 0, 0, 0, 0, 0, 2, 0],
-	[0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0],
+	[0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+	[0, 4, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 4, 0],
+	[0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0],
+	[0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+	[0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0],
+	[0, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 0],
+	[0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0],
+	[2, 2, 2, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 2, 2, 2],
+	[0, 0, 0, 0, 1, 0, 1, 0, 0, 3, 0, 0, 1, 0, 1, 0, 0, 0, 0],
+	[2, 2, 2, 2, 1, 1, 1, 0, 3, 3, 3, 0, 1, 1, 1, 2, 2, 2, 2],
+	[0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0],
+	[2, 2, 2, 0, 1, 0, 1, 1, 1, 2, 1, 1, 1, 0, 1, 0, 2, 2, 2],
+	[0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0],
+	[0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+	[0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0],
+	[0, 4, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 4, 0],
+	[0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0],
+	[0, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 0],
+	[0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0],
+	[0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
 	[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 ];
 
@@ -1389,6 +1331,6 @@ $(function(){
 });
 
 
-</script>
+	</script>
 </body>
 </html>
