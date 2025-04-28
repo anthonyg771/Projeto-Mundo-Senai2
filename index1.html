@@ -332,11 +332,6 @@ Pacman.User = function (game, map) {
     keyMap[KEY.ARROW_RIGHT] = RIGHT;
     keyMap[KEY.ARROW_DOWN]  = DOWN;
 
-    
-    function addScore(nScore) {
-    }
-   
-    
 
     function loseLife() { 
         lives -= 1;
@@ -1027,13 +1022,19 @@ drawFooter();
 }
 
 function eatenPill() {
+    if (state === pause) {
+        return; // Se estiver pausado, sai da função
+    }
     audio.play("eatpill");
     timerStart = tick;
     eatenCount = 0;
+    
     for (i = 0; i < ghosts.length; i += 1) {
         ghosts[i].makeEatable(ctx);
     }
-};
+
+    
+}
 
 function completedLevel() {
         setState(WAITING);
