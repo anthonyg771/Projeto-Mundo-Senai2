@@ -13,23 +13,32 @@
 
         body {
             font-family: 'Press Start 2P', cursive, Arial, sans-serif;
-            background-image: url('https://i.ytimg.com/vi/gYbFUM6gB7Q/hq720.jpg?sqp=-oaymwEhCK4FEIIDSFryq4qpAxMIARUAAAAAGAElAADIQj0AgKJD&rs=AOn4CLAqRrgO-B6ofhr-qdkz3SE9PTQtwg');
+            margin: 0; /* Remove margens padrão */
+            padding: 0; /* Remove paddings padrão */
+            background-image: url('Imagem39.jpg'); /* Caminho da sua imagem */
+            background-size: cover; /* Faz a imagem cobrir todo o fundo */
+            background-position: center; /* Centraliza a imagem */
+            background-repeat: no-repeat; /* Evita repetição da imagem */
+            background-attachment: fixed; /* Opcional: Fixa o background ao rolar a página */
+            height: 30vh; /* Garante que o body ocupe toda a altura da tela */
+            justify-content: flex-end;
             color: white;
             overflow: hidden;
             height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
         }
 
         .game-container {
-            position: relative;
             width: 800px;
             height: 600px;
-            background-color: #000;
+            background-image:url('Imagem41.jpg');
+            background-size: cover;
+            background-repeat: no-repeat;
             border: 4px solid #333;
             box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+            position: relative;
             overflow: hidden;
         }
 
@@ -48,7 +57,7 @@
             position: absolute;
             width: 40px;
             height: 40px;
-            background-image: url('imagem3.png');
+            background-image: url('Imagem3.png');
             border-radius: 5px;
             box-shadow: 0 0 10px rgba(255, 255, 255, 0.7);
             z-index: 5;
@@ -59,7 +68,7 @@
             position: absolute;
             width: 70px;
             height: 50px;
-            background-image: url(Imagem7.png);
+            background-image: url('Imagem7.png');
             border-radius: 10px;
             z-index: 4;
             transition: all 0.2s linear;
@@ -205,7 +214,7 @@
         <div class="oceano"></div>
         <div class="score-panel">Pontos: <span id="score">0</span></div>
         <div class="level-panel">Nível: <span id="level">1</span></div>
-        <div class="warning" id="warning">CROCODILO SE APROXIMANDO!</div>
+        <div class="warning" id="warning">BOMBARDIRO CROCODILO SE APROXIMANDO!</div>
         <div class="tralalero" id="tralalero"></div>
         <div class="crocodilo" id="crocodilo"></div>
         
