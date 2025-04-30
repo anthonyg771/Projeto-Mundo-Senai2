@@ -80,7 +80,10 @@
             position: absolute;
             width: 20px;
             height: 20px;
-            background-color: #DF3232;
+            background-image: url('bomb1.png');
+            background-size: cover; /* Faz a imagem cobrir todo o fundo */
+            background-position: center; /* Centraliza a imagem */
+            background-repeat: no-repeat; /* Evita repetição da imagem */
             border-radius: 50%;
             box-shadow: 0 0 8px rgba(223, 50, 50, 0.8);
             z-index: 3;
@@ -95,6 +98,17 @@
             font-size: 16px;
             color: #FF5722;
             z-index: 20;
+        }
+
+
+        .score-panel{
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 16px;
+            color: #ffffff;
+            z-index: 20;
+        
         }
 
         .question-screen {
@@ -264,7 +278,7 @@
             x: containerWidth / 2 - 30,
             y: 50
         };
-        let crocodiloSpeed = 3;
+        let crocodiloSpeed = 5;
         let crocodiloOriginalY = 50;
         let crocodiloEstaDescendo = false;
         let currentLevel = 1;
@@ -300,6 +314,52 @@
                 options: ["6", "12", "24", "8"],
                 answer: 2
             },
+            {
+                question: "Quantas senhas com 4 algarismos diferentes podemos escrever com os algarismos 1, 2, 3, 4, 5, 6, 7, 8,e 9?",
+                options: [" 1 498", "2 378", " 3 024", "4 256"],
+                answer: 2
+            },
+            {
+                question: "Um técnico de um time de voleibol possui a sua disposição 15 jogadores que podem jogar em qualquer posição. De quantas maneiras ele poderá escalar seu time de 6 jogadores?",
+                options: ["4 450 ", "2 458", " 4 544", "5 005"],
+                answer: 3
+            },
+            {
+                question: "De quantas maneiras diferentes, uma pessoa pode se vestir tendo 6 camisas e 4 calças?",
+                options: [" 10", "24", " 50", "22"],
+                answer: 1
+            },
+            {
+                question: "De quantas maneiras diferentes 6 amigos podem sentar em um banco para tirar uma foto?",
+                options: ["  720", "800", " 600", "340"],
+                answer: 0
+            },
+            {
+                question: "Em uma competição de xadrez existem 8 jogadores. De quantas formas diferentes poderá ser formado o pódio (primeiro, segundo e terceiro lugares)?",
+                options: [" 207", "550", " 424", "336"],
+                answer: 3
+            },
+            {
+                question: "Quantas comissões de 4 elementos podemos formar com 20 alunos de uma turma?",
+                options: [" 1 498", "2 378", " 3 024", "4 845"],
+                answer: 3
+            },
+            {
+                question: "Quantas motos podem ser licenciadas se cada placa tiver 2 vogais (podendo haver vogais repetidas) e 3 algarismos distintos?",
+                options: [" 18 000", "25 378", " 34 024", "85 845"],
+                answer: 0
+            },
+            {
+                question: "Quantos anagramas com 4 letras distintas podemos formar com as 10 primeiras letras do alfabeto e que contenham duas das letras a, b e c?",
+                options: [" 1 498", "2 378", "  1 512", "4 256"],
+                answer: 2
+            },
+            {
+                question: "Com os algarismos de 1 a 9, o total de números de 4 algarismos diferentes, formados por 2 algarismos pares e 2 ímpares, é igual a:",
+                options: [" 1 440", "2 378", " 1 024", "5 256"],
+                answer: 0
+            },
+            
             {
                 question: "De quantas maneiras 3 pessoas podem se sentar em 3 cadeiras?",
                 options: ["3", "6", "9", "12"],
@@ -368,7 +428,7 @@
                 currentLevel++;
                 levelElement.textContent = currentLevel;
                 crocodiloSpeed += 0.5;
-                bombSpeed += 0.3;
+                bombSpeed += 0.5;
                 bombInterval = Math.max(30, bombInterval - 5);
                 
                 // Resetar posições
@@ -420,17 +480,24 @@
                     crocodiloEstaDescendo = true;
                     crocodiloOriginalY = crocodiloPos.y;
                 }
+                
+                
             } else {
                 tempoNaParteDeBaixo = 0;
                 warningElement.style.opacity = '0';
                 
                 // Faz o crocodilo voltar para cima se o jogador sair da parte de baixo
                 if (crocodiloEstaDescendo) {
-                    crocodiloPos.y -= 1;
-                    if (crocodiloPos.y <= crocodiloOriginalY) {
-                        crocodiloPos.y = crocodiloOriginalY;
-                        crocodiloEstaDescendo = false;
-                    }
+                    tralaleroPos >= -40;
+                    crocodiloPos = {
+                        x: containerWidth / 2 - 30,
+                        y: 50
+                    };
+                    crocodilo.style.left = crocodiloPos.x + 'px';
+                    crocodilo.style.top = crocodiloPos.y + 'px';
+                    crocodiloEstaDescendo = false;
+                    warningElement.style.opacity = '0';
+                    tempoNaParteDeBaixo = 0;
                 }
             }
             
@@ -502,6 +569,10 @@
 
                 // Verificar colisão com o Tralalero
                 if (checkCollision(tralalero, bomb)) {
+                    endGame();
+                    return;
+                }
+                if (checkCollision(tralalero, crocodilo)) {
                     endGame();
                     return;
                 }
